@@ -81,11 +81,9 @@ export default function RestaurantListings({
 			setRestaurants(data);
 		}, filters);
 
-		return () => unsubscribe;
-		// eslint-disable-next-line react-hooks/exhaustive-deps
-		/*return () => {
+		return () => {
 			unsubscribe();
-		};*/
+		};
 	}, [filters]);
 
 	return (
