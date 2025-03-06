@@ -3,3 +3,4 @@ lib/firebase/config.js
 .firebase/
 node_modules/
 .idea
+.env
