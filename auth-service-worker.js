@@ -3,7 +3,7 @@ import { getAuth, getIdToken } from "firebase/auth";
 import { getInstallations, getToken } from "firebase/installations";
 
 let firebaseConfig;
-let firebaseApp; // Store the initialized Firebase app
+let firebaseApp;
 
 self.addEventListener('install', event => {
   const serializedFirebaseConfig = new URL(location).searchParams.get('firebaseConfig');
@@ -15,7 +15,7 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('activate', event => {
-  firebaseApp = initializeApp(firebaseConfig); // Initialize on activate
+  firebaseApp = initializeApp(firebaseConfig);
   console.log("firebase app initialized");
 });
 
@@ -40,7 +40,7 @@ async function fetchWithFirebaseHeaders(request) {
     return await fetch(newRequest);
   } catch (error) {
     console.error("Error adding Firebase headers:", error);
-    return fetch(request); // Return the original request on error
+    return fetch(request);
   }
 }
 
