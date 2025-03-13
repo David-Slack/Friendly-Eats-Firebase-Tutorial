@@ -7991,6 +7991,7 @@
 
   // auth-service-worker.js
   var firebaseConfig;
+  var firebaseApp;
   self.addEventListener("install", (event) => {
     const serializedFirebaseConfig = new URL(location).searchParams.get("firebaseConfig");
     if (!serializedFirebaseConfig) {
@@ -7999,6 +8000,10 @@
     firebaseConfig = JSON.parse(serializedFirebaseConfig);
     console.log("Service worker installed with Firebase config", firebaseConfig);
   });
+  self.addEventListener("activate", (event) => {
+    firebaseApp = initializeApp(firebaseConfig);
+    console.log("firebase app initialized");
+  });
   self.addEventListener("fetch", (event) => {
     const { origin } = new URL(event.request.url);
     if (origin !== self.location.origin)
@@ -8006,25 +8011,34 @@
     event.respondWith(fetchWithFirebaseHeaders(event.request));
   });
   async function fetchWithFirebaseHeaders(request) {
-    const app = initializeApp(firebaseConfig);
-    export const auth = getAuth(app);
-    const installations = getInstallations(app);
+    const auth = getAuth(firebaseApp);
+    const installations = getInstallations(firebaseApp);
     const headers = new Headers(request.headers);
-    const [authIdToken, installationToken] = await Promise.all([
-      getAuthIdToken(auth),
-      getToken(installations)
-    ]);
-    headers.append("Firebase-Instance-ID-Token", installationToken);
-    if (authIdToken)
-      headers.append("Authorization", `Bearer ${authIdToken}`);
-    const newRequest = new Request(request, { headers });
-    return await fetch(newRequest);
+    try {
+      const [authIdToken, installationToken] = await Promise.all([
+        getAuthIdToken(auth),
+        getToken(installations)
+      ]);
+      headers.append("Firebase-Instance-ID-Token", installationToken);
+      if (authIdToken)
+        headers.append("Authorization", `Bearer ${authIdToken}`);
+      const newRequest = new Request(request, { headers });
+      return await fetch(newRequest);
+    } catch (error) {
+      console.error("Error adding Firebase headers:", error);
+      return fetch(request);
+    }
   }
   async function getAuthIdToken(auth) {
-    await auth.authStateReady();
-    if (!auth.currentUser)
-      return;
-    return await getIdToken(auth.currentUser);
+    try {
+      await auth.authStateReady();
+      if (!auth.currentUser)
+        return;
+      return await getIdToken(auth.currentUser);
+    } catch (error) {
+      console.error("Error getting auth ID token:", error);
+      return null;
+    }
   }
 })();
 /*! Bundled license information:
